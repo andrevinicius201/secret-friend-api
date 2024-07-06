@@ -1,0 +1,28 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgres"
+    url      = env("DATABASE_URL")
+}
+
+model Room {
+    id                  String         @id @default(uuid())
+    title               String
+    Participants        Participants[]
+    maximumParticipants Int?           @map("maximum_participants")
+
+    @@map("rooms")
+}
+
+model Participants {
+    id           String @id @default(uuid())
+    nickname     String
+    phone_number String
+    roomId       String @map("room_id")
+    room         Room   @relation(fields: [roomId], references: [id])
+
+    @@unique([roomId, nickname])
+    @@map("participants")
+}

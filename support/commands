@@ -1,0 +1,4 @@
+npx tsx server.js
+npx prisma studio
+npx prisma generate
+npx prisma migrate dev
