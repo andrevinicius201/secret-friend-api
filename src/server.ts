@@ -1,12 +1,12 @@
 import fastify from 'fastify'
 import { registerParticipant } from './routes/register-participant'
 import { createRoom } from './routes/create-room'
+import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod'
 
-const app = fastify()
-// .withTypeProvider<ZodTypeProvider>()
+const app = fastify().withTypeProvider<ZodTypeProvider>()
 
-// app.setValidatorCompiler(validatorCompiler)
-// app.setSerializerCompiler(serializerCompiler)
+app.setValidatorCompiler(validatorCompiler)
+app.setSerializerCompiler(serializerCompiler)
 
 app.register(createRoom)
 app.register(registerParticipant)
