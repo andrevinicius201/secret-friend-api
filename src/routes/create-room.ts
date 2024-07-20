@@ -16,23 +16,34 @@ export async function createRoom(app:FastifyInstance){
             }),
             response: {
                 201: z.object({
-                    roomId: z.string().min(4),
+                    roomId: z.string().min(4).nullish(),
+                    msg: z.string().nullish()
                     })
                 }
             }
         }, 
+        
         async(request, reply) => {
 
-            const { title, maximumAttendees } = request.body;
+            const title = request.body.title.toLowerCase()
+            const maximumAttendees = request.body.maximumAttendees
+
+            const existing_room = await prisma.room.findFirst({
+                where: {
+                    title: title
+                }
+            })
+
+            if(existing_room) return reply.status(401).send({ msg: "A room with the specified name already exists"})
 
             
             const new_room = await prisma.room.create({
                 data: {
-                    title: title,
+                    title: title.toLowerCase(),
                     maximumParticipants: maximumAttendees ? maximumAttendees : null
                 }
             })
 
-            return reply.status(201).send({ roomId: new_room.title})
+            return reply.status(201).send({ roomId: new_room.id})
         })
 }

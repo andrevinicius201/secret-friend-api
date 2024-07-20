@@ -6,14 +6,17 @@ import { z } from "zod";
 export async function registerParticipant (app: FastifyInstance){
     app
     .withTypeProvider<ZodTypeProvider>()
-    .post("/register/:id", {
+    .post("/register/:roomId", {
         schema: {
             summary: 'Register participant',
             tags:['participant_registration'],
             body: z.object({
                 nickName: z.string({ invalid_type_error: 'Participant must be a string containing at least 4 characters'}).min(4),
-                roomId: z.string({ invalid_type_error: 'RoomId must be a string containing at least 4 characters'}).min(4),
                 phone_number: z.string({ invalid_type_error: 'RoomId must be a string containing at least 4 characters'}).min(4),
+            }),
+            
+            params: z.object({
+                roomId: z.string({ invalid_type_error: 'RoomId must be a string containing at least 4 characters'}).min(4)
             }),
             response: {
                 201: z.object({
@@ -23,7 +26,8 @@ export async function registerParticipant (app: FastifyInstance){
         }
     },  async(request, reply) => {
 
-        const {roomId, nickName, phone_number} = request.body
+        const {nickName, phone_number} = request.body
+        const roomId = request.params.roomId
 
         const [room, currentNumberOfParticipants] = await Promise.all([
             prisma.room.findUnique({
@@ -39,10 +43,9 @@ export async function registerParticipant (app: FastifyInstance){
         ])
 
 
-        if(!room) return reply.status(404).send({message: "Event does not exist"})
+        if(!room) return reply.status(404).send({message: "Specified room does not exist"})
 
         if(room?.maximumParticipants && currentNumberOfParticipants >= room.maximumParticipants){
-            // throw new BadRequest('This event is no longer avaiable for new registrations')
             return reply.status(401).send({message: "This room is no longer available for new participants"})
         }
         

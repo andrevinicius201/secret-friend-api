@@ -17,11 +17,12 @@ model Room {
 }
 
 model Participants {
-    id           String @id @default(uuid())
+    id           String  @id @default(uuid())
     nickname     String
     phone_number String
-    roomId       String @map("room_id")
-    room         Room   @relation(fields: [roomId], references: [id])
+    roomId       String  @map("room_id")
+    room         Room    @relation(fields: [roomId], references: [id])
+    pair         String?
 
     @@unique([roomId, nickname])
     @@map("participants")
