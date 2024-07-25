@@ -13,6 +13,7 @@ export async function registerParticipant (app: FastifyInstance){
             body: z.object({
                 nickName: z.string({ invalid_type_error: 'Participant must be a string containing at least 4 characters'}).min(4),
                 phone_number: z.string({ invalid_type_error: 'RoomId must be a string containing at least 4 characters'}).min(4),
+                inputPassword: z.string({ invalid_type_error: 'Password must be a string containing at least 4 characters'}).min(4)
             }),
             
             params: z.object({
@@ -26,7 +27,7 @@ export async function registerParticipant (app: FastifyInstance){
         }
     },  async(request, reply) => {
 
-        const {nickName, phone_number} = request.body
+        const {nickName, phone_number, inputPassword} = request.body
         const roomId = request.params.roomId
 
         const [room, currentNumberOfParticipants] = await Promise.all([
@@ -44,6 +45,10 @@ export async function registerParticipant (app: FastifyInstance){
 
 
         if(!room) return reply.status(404).send({message: "Specified room does not exist"})
+
+        if(room && room.accessPassword != inputPassword){
+            return reply.status(403).send({message: "The password is not valid"})
+        }
 
         if(room?.maximumParticipants && currentNumberOfParticipants >= room.maximumParticipants){
             return reply.status(401).send({message: "This room is no longer available for new participants"})

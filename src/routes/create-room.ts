@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify"
 import { prisma } from "../lib/prisma"
 import { ZodTypeProvider } from "fastify-type-provider-zod"
 import {z} from "zod"
+import { generatePassword } from "../lib/room_password_generator"
 
 export async function createRoom(app:FastifyInstance){
     app
@@ -11,8 +12,10 @@ export async function createRoom(app:FastifyInstance){
             summary: 'Create room',
             tags:['rooms'],
             body: z.object({
-                title: z.string({ invalid_type_error: 'Title must be a string containing at least 4 characters'}).min(4),
-                maximumAttendees: z.number().int().nullable()
+                title: z.string({ invalid_type_error: '"title" must be a string containing at least 4 characters'}).min(4),
+                maximumAttendees: z.number().int().nullable(),
+                organizerNickname: z.string({ invalid_type_error: '"organizerNickname" must be a string containing at least 4 characters'}).min(4),
+                organizerPhoneNumber: z.string({ invalid_type_error: '"organizerPhoneNumber" must be a string containing at least 4 characters'}).min(4),
             }),
             response: {
                 201: z.object({
@@ -25,8 +28,8 @@ export async function createRoom(app:FastifyInstance){
         
         async(request, reply) => {
 
-            const title = request.body.title.toLowerCase()
-            const maximumAttendees = request.body.maximumAttendees
+            let { title, maximumAttendees, organizerNickname, organizerPhoneNumber } = request.body
+            title = title.toLowerCase()
 
             const existing_room = await prisma.room.findFirst({
                 where: {
@@ -36,11 +39,25 @@ export async function createRoom(app:FastifyInstance){
 
             if(existing_room) return reply.status(401).send({ msg: "A room with the specified name already exists"})
 
+
+            const room_access_password = generatePassword()
+            const administrator_password = generatePassword()
             
             const new_room = await prisma.room.create({
                 data: {
-                    title: title.toLowerCase(),
-                    maximumParticipants: maximumAttendees ? maximumAttendees : null
+                    title: title,
+                    maximumParticipants: maximumAttendees ? maximumAttendees : null,
+                    accessPassword: room_access_password,
+                    adminPassword: administrator_password
+                }
+            })
+
+            const organizerRegistrationAsParticipant = await prisma.participants.create({
+                data: {
+                    nickname: organizerNickname,
+                    isOrganizer: true, 
+                    phone_number: organizerPhoneNumber,
+                    roomId: new_room.id
                 }
             })
 

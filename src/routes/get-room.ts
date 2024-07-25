@@ -6,19 +6,19 @@ import { z } from "zod";
 export async function getRoom(app:FastifyInstance){
     app
     .withTypeProvider<ZodTypeProvider>()
-    .get("/room/:roomTitle", {
+    .get("/room/:roomId", {
         schema: {
             params: z.object({
-                roomTitle: z.string()
+                roomId: z.string()
             }),
         }
     }, async (request, reply) => {
 
-        const roomTitle = request.params.roomTitle.toLowerCase()
+        const { roomId } = request.params
 
-        const foundRoom = await prisma.room.findFirst({
+        const foundRoom = await prisma.room.findUnique({
             where: {
-                title: roomTitle
+                id: roomId
             }
         })
 

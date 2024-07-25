@@ -12,6 +12,9 @@ model Room {
     title               String
     Participants        Participants[]
     maximumParticipants Int?           @map("maximum_participants")
+    accessPassword      String         @map("password")
+    adminPassword       String         @map("admin_password")
+    drawed              Boolean        @default(false)
 
     @@map("rooms")
 }
@@ -19,6 +22,7 @@ model Room {
 model Participants {
     id           String  @id @default(uuid())
     nickname     String
+    isOrganizer  Boolean @default(false) @map("is_organizer")
     phone_number String
     roomId       String  @map("room_id")
     room         Room    @relation(fields: [roomId], references: [id])
